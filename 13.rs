@@ -14,8 +14,8 @@ fn main() {
 
 	let mut list: Vec<(usize, usize)> = Vec::new();
 	for lines in input.lines() {
-		let mut words = lines.split_whitespace();
-		list.push((words.next().unwrap().parse().expect("parse"), words.next().unwrap().parse().expect("parse")))
+		let mut nums = lines.split_whitespace().map(|x| x.parse().expect("parse"));
+		list.push((nums.next().unwrap(), nums.next().unwrap()));
 	}
 
 	// println!("{:?}", list);
