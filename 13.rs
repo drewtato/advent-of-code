@@ -21,7 +21,7 @@ fn main() {
 	// println!("{:?}", list);
 	let mut severity = 0;
 	for &(depth, range) in list.iter() {
-		if (depth) % (range * 2 - 2) == 0 {
+		if depth % (range * 2 - 2) == 0 {
 			severity += range * depth;
 		}
 	}
