@@ -2,7 +2,6 @@
 
 use std::fs;
 use std::io::Read;
-//use std::collections::VecDeque;
 
 fn main() {
 	let mut input = String::new();
