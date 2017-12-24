@@ -12,7 +12,7 @@ fn main() {
 	}
 	let input = input;
 
-	let mut diagram: Vec<Vec<_>> = Vec::new();
+	let mut diagram = Vec::new();
 	for line in input.lines() {
 		let mut v = Vec::new();
 		v.push(' ');
