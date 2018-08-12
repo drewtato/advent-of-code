@@ -1,3 +1,4 @@
 test.rs
 test.txt
 *.exe
+*.pdb
