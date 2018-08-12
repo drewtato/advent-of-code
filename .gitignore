@@ -2,3 +2,5 @@ test.rs
 test.txt
 *.exe
 *.pdb
+Cargo.lock
+target/
