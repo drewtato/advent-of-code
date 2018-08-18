@@ -59,7 +59,6 @@ In what order are the programs standing after their billion dances?
 	noted in the commit. This is the first one
 	that I haven't been able to get.
     */
-
 use std::fs;
 use std::io::Read;
 //use std::collections::VecDeque;
@@ -71,106 +70,72 @@ fn main() {
 	while input.chars().rev().next().unwrap().is_whitespace() {
 		input.pop();
 	}
-
-	/*let mut programs: VecDeque<char> = VecDeque::new();
-	for c in ('a' as u8)..('q' as u8) {
-		programs.push_back(c as char);
-	}
-	// println!("{:?}", programs);
-	let mut first = true;
-	let mut seen: Vec<Vec<char>> = Vec::new();
-	loop {
-		for item in input.split(',') {
-			let len = item.len();
-			match item.as_bytes()[0] as char {
-				's' => {
-					for _ in 0..item[1..len].parse::<u8>().expect("parse2") {
-						let temp = programs.pop_back().unwrap();
-						programs.push_front(temp);
-					}
-				},
-				'x' => {
-					let mut num = item[1..len].split('/');
-					let a = num.next().unwrap().parse::<usize>().unwrap();
-					let b = num.next().unwrap().parse::<usize>().unwrap();
-					programs.swap(a, b);
-				},
-				'p' => {
-					let mut c = item[1..len].chars();
-					let a = c.next().unwrap();
-					c.next();
-					let b = c.next().unwrap();
-					let ai = programs.iter().position(|&x| x == a).unwrap();
-					let bi = programs.iter().position(|&x| x == b).unwrap();
-					programs.swap(ai, bi);
+	
+	let input = input.split(',');
+	
+	let mut positions = (0..16).collect::<Vec<_>>();
+	let mut letters = "abcdefghijklmnop".chars().collect::<Vec<_>>();
+	let mut result = letters.clone();
+	// println!("{:?}", positions);
+	// println!("{:?}", letters);
+	// println!("{:?}", input.collect::<Vec<_>>());
+	
+	let input_positions = input.clone().filter(|&x| x.chars().next().unwrap() != 'p');
+	let input_letters = input.clone().filter(|&x| x.chars().next().unwrap() == 'p');
+	
+	for dance_move in input_positions {
+		let mut dance_iter = dance_move.chars();
+		match dance_iter.next() {
+			Some('s') => {
+				for _ in 0..(dance_iter.collect::<String>().parse::<usize>().unwrap()) {
+					let temp = positions.pop().unwrap();
+					positions.insert(0, temp);
 				}
-				x @ _ => panic!("umm {}", x),
-			}
-		}
-		let progvec: Vec<char> = programs.clone().into_iter().collect();
-		seen.push(progvec);
-		if !first {
-			if seen[0] == *seen.last().unwrap() {
-				break;
-			}
-		}
-		first = false;
-	}
-	for c in seen[0].iter() {
-		print!("{}", c);
-	}
-	println!("");
-
-	let a = 1_000_000_000 % (seen.len() - 1);
-	println!("{}", seen.len());
-	for c in seen[a].iter() {
-		print!("{}", c);
-	}
-	println!(""); */
-
-	let mut spin = 0;
-	let mut swapindex: Vec<usize> = (0..16).collect();
-	let mut programs = Vec::new();
-	for c in ('a' as u8)..('q' as u8) {
-		programs.push(c as char);
-	}
-
-	for item in input.split(',') {
-		let len = item.len();
-		match item.as_bytes()[0] as char {
-			's' => {
-				spin += item[1..len].parse::<usize>().expect("parse2");
-				spin %= 16;
 			},
-			'x' => {
-				let mut num = item[1..len].split('/');
-				let a = (num.next().unwrap().parse::<usize>().unwrap() + 16 - spin) % 16;
-				let b = (num.next().unwrap().parse::<usize>().unwrap() + 16 - spin) % 16;
-				swapindex.swap(a, b);
+			Some('x') => {
+				let digits = dance_iter
+					.collect::<String>()
+					.split('/')
+					.map(|x| x.parse::<usize>().unwrap())
+					.collect::<Vec<_>>();
+				positions.swap(digits[0], digits[1]);
 			},
-			'p' => (),
-			x @ _ => panic!("umm {}", x),
+			Some(_) => panic!("bad character"),
+			None => panic!("Dance had no characters"),
 		}
 	}
-	let swapindex = swapindex;
-	let spin = spin;
-	let mut newprog = programs.clone();
-	let mut seen: Vec<Vec<char>> = Vec::new();
-	loop {
-		seen.push(programs.clone());
-		// println!("{}\n{:?}\n{:?}", spin, swapindex, swapprog);
-		for (&c, &i) in programs.iter().zip(swapindex.iter()) {
-			newprog[i] = c;
+	
+	// println!("{:?}", positions);
+	
+	for dance_move in input_letters {
+		let mut swaps = Vec::new();
+		swaps.push(dance_move.chars().nth(1).unwrap());
+		swaps.push(dance_move.chars().nth(3).unwrap());
+		let mut new_letters = Vec::new();
+		for l in letters.clone() {
+			let new = if l == swaps[0] {
+				swaps[1]
+			} else if l == swaps[1] {
+				swaps [0]
+			} else {
+				l
+			};
+			new_letters.push(new);
 		}
-		for i in 0..16 {
-			programs[i] = newprog[(i + spin) % 16];
+		letters = new_letters;
+	}
+	
+	// println!("{:?}", letters);
+	
+	for _ in 0..1 {
+		let mut new = Vec::new();
+		for i in positions.iter() {
+			new.push(result[*i]);
 		}
-		if programs == seen[0] {
-			break;
+		for (c, d) in letters.iter().zip("abcdefghijklmnop".chars()) {
+			
 		}
 	}
-	for c in seen[1_000_000_000 % seen.len()].iter() {
-		print!("{}", c);
-	}
-	println!("");
+	
+	println!("{}", result.iter().collect::<String>());
 }
