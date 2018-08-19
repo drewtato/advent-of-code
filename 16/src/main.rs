@@ -75,7 +75,6 @@ fn main() {
 	
 	let mut positions = (0..16).collect::<Vec<_>>();
 	let mut letters = "abcdefghijklmnop".chars().collect::<Vec<_>>();
-	let mut result = letters.clone();
 	// println!("{:?}", positions);
 	// println!("{:?}", letters);
 	// println!("{:?}", input.collect::<Vec<_>>());
@@ -127,15 +126,27 @@ fn main() {
 	
 	// println!("{:?}", letters);
 	
-	for _ in 0..1 {
+	let result = transform(1, &positions, &letters);
+	println!("{}", result.iter().collect::<String>());
+	
+	let result = transform(51712, &positions, &letters);
+	println!("{}", result.iter().collect::<String>());
+}
+
+fn transform(i: usize, positions: &Vec<usize>, letters: &Vec<char>) -> Vec<char> {
+	let mut result = "abcdefghijklmnop".chars().collect::<Vec<_>>();
+	for _ in 0..i {
 		let mut new = Vec::new();
 		for i in positions.iter() {
 			new.push(result[*i]);
 		}
-		for (c, d) in letters.iter().zip("abcdefghijklmnop".chars()) {
-			
+		result = new;
+		new = Vec::new();
+		for c in result.iter() {
+			let index = *c as usize - 'a' as usize;
+			new.push(letters[index]);
 		}
+		result = new;
 	}
-	
-	println!("{}", result.iter().collect::<String>());
+	result
 }
