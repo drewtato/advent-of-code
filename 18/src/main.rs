@@ -130,19 +130,22 @@ fn main() {
 
 	let mut reg: [usize; 26] = [0; 26];
 	let mut sound = 0;
-	
-	for line in input.lines() {
-		let args: Vec<_> = line.split_whitespace().collect();
-		match args[0] {
+	let commands: Vec<Vec> = input.lines().map(|x| 
+x.split_whitespace().collect()).collect();
+	let mut index = 0;
+
+	while (index >= 0 && index < commands.len()) {
+		let args = commands[index].clone();
+		match args[0] {7
 			"snd" => snd(&reg, &args[1], &mut sound),
-			// "set" => set(reg, args[1], args[2]),
-			// "add" => add(reg, args[1], args[2]),
-			// "mul" => mul(reg, args[1], args[2]),
-			// "mod" => modu(reg, args[1], args[2]),
-			// "rcv" => if rcv(reg, args[1]) { break },
-			// "jgz" => jgz(reg, args[1], args[2]),
-			// _ => panic!("Unknown instruction"),
-			_ => continue,
+			"set" => set(&mut reg, &args[1], &args[2]),
+			"add" => add(&mut reg, &args[1], &args[2]),
+			"mul" => mul(&mut reg, &args[1], &args[2]),
+			"mod" => modu(&mut reg, &args[1], &args[2]),
+			"rcv" => if rcv(&reg, &args[1]) { break },
+			"jgz" => jgz(reg, args[1], args[2], &mut 
+index),
+			_ => panic!("Unknown instruction"),
 		}
 	}
 	println!("{}", sound);
@@ -152,3 +155,5 @@ fn snd(reg: &[usize], first: &str, sound: &mut usize) {
 	let index = first.chars().next().unwrap() as usize - 'a' as usize;
 	*sound = reg[index];
 }
+
+fn 
