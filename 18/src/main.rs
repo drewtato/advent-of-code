@@ -120,6 +120,7 @@ so), how many times did program 1 send a value?
 use std::fs;
 use std::io::Read;
 use std::collections::VecDeque;
+use std::mem::swap;
 
 fn main() {
 	let mut input = String::new();
@@ -171,51 +172,88 @@ fn main() {
 	println!("{}", sound);
 	
 	// Part 2
+	let p_index = 'p' as usize - 'a' as usize;
+	let mut snd_count = 0;
 	
 	let mut reg1: [isize; 27] = [0; 27];
 	reg1[26] = 1;
-	let mut progcount1 = 0;
+	reg1[p_index] = 0;
+	let mut progcount1: isize = 0;
 	let mut queue1: VecDeque<isize> = VecDeque::new();
 	let mut locked1 = false;
 	
 	let mut reg2: [isize; 27] = [0; 27];
 	reg2[26] = 1;
-	let mut progcount2 = 0;
+	reg2[p_index] = 1;
+	let mut progcount2: isize = 0;
 	let mut queue2: VecDeque<isize> = VecDeque::new();
 	let mut locked2 = false;
 	
-	let mut current_reg = &mut reg1;
-	let mut current_progcount = &mut progcount1;
-	let mut current_queue = &mut queue1;
-	let mut current_locked = &mut locked1;
+	let current_reg = &mut reg1;
+	let current_progcount = &mut progcount1;
+	let current_queue = &mut queue1;
+	let current_locked = &mut locked1;
 	
-	let mut other_reg = &mut reg2;
-	let mut other_progcount = &mut progcount2;
-	let mut other_queue = &mut queue2;
-	let mut other_locked = &mut locked2;
+	let other_reg = &mut reg2;
+	let other_progcount = &mut progcount2;
+	let other_queue = &mut queue2;
+	let other_locked = &mut locked2;
 	
-	let mut temp_reg;
-	let mut temp_progcount;
-	let mut temp_queue;
-	let mut temp_locked;
+	let mut current_prog = 0;
 	
-	let mut current_prog = 1;
-	
-	while !locked1 || !locked2 {
-		let line = lines[*current_progcount];
+	while !*current_locked {
+		// print!("{}:{:02} ", current_prog, current_progcount);
+		let line = lines[*current_progcount as usize];
 		let args: Vec<_> = line.split_whitespace().collect();
 		let index: usize = match args[1].parse::<usize>() {
 			Ok(_) => 26,
-			Err(_) => {
-				match args[1].chars().next().unwrap() as usize - 'a' as usize {
-					15 => current_prog,
-					x => x,
+			Err(_) => args[1].chars().next().unwrap() as usize - 'a' as usize,
+		};
+		
+		let mut value: isize = 0;
+		if args.len() == 3 {
+			value = match args[2].parse() {
+				Ok(x) => x,
+				Err(_) => {
+					let i = args[2].chars().next().unwrap() as usize - 'a' as usize;
+					current_reg[i] as isize
+				},
+			};
+		}
+		
+		match args[0] {
+			"snd" => {
+				snd_fixed(current_reg, &index, other_queue, other_locked);
+				if current_prog == 1 {
+					snd_count += 1;
 				}
 			},
-		};
-		let mut value: isize = 0;
-		
+			"set" => set(current_reg, &index, &value),
+			"add" => add(current_reg, &index, &value),
+			"mul" => mul(current_reg, &index, &value),
+			"mod" => modu(current_reg, &index, &value),
+			"rcv" => if rcv_fixed(current_reg, &index, current_queue) {
+				*current_locked = true;
+				current_prog = match current_prog {
+					0 => 1,
+					1 => 0,
+					_ => panic!("Bad prog number"),
+				};
+				
+				swap(current_reg, other_reg);
+				swap(current_progcount, other_progcount);
+				swap(current_queue, other_queue);
+				swap(current_locked, other_locked);
+				
+				continue
+			},
+			"jgz" => jgz(current_reg, &index, &value, current_progcount),
+			_ => panic!("Unknown instruction"),
+			// _ => {},
+		}
+		*current_progcount += 1;
 	}
+	println!("{}", snd_count);
 }
 
 fn snd(regs: &[isize], index: &usize, sound: &mut isize) {
@@ -249,10 +287,15 @@ fn jgz(regs: &mut [isize], index: &usize, value: &isize, current: &mut isize) {
 	}
 }
 
-fn snd_fixed() {
-	unimplemented!();
+fn snd_fixed(regs: &[isize], index: &usize, queue: &mut VecDeque<isize>, locked: &mut bool) {
+	queue.push_back(regs[*index]);
+	*locked = false;
 }
 
-fn rcv_fixed() {
-	unimplemented!();
+fn rcv_fixed(regs: &mut [isize], index: &usize, queue: &mut VecDeque<isize>) -> bool {
+	match queue.pop_front() {
+		Some(x) => regs[*index] = x,
+		None => return true,
+	}
+	false
 }
