@@ -128,27 +128,79 @@ fn main() {
 		input.pop();
 	}
 
-	let mut reg: [usize; 26] = [0; 26];
+	let mut regs: [isize; 27] = [0; 27];
+	regs[26] = 1;
 	let mut sound = 0;
+	let mut current: isize = 0;
+	let lines: Vec<_> = input.lines().collect();
 	
-	for line in input.lines() {
+	while (current >= 0) && (current < lines.len() as isize) {
+		let line = lines[current as usize];
+		// println!("{}", line);
 		let args: Vec<_> = line.split_whitespace().collect();
-		match args[0] {
-			"snd" => snd(&reg, &args[1], &mut sound),
-			// "set" => set(reg, args[1], args[2]),
-			// "add" => add(reg, args[1], args[2]),
-			// "mul" => mul(reg, args[1], args[2]),
-			// "mod" => modu(reg, args[1], args[2]),
-			// "rcv" => if rcv(reg, args[1]) { break },
-			// "jgz" => jgz(reg, args[1], args[2]),
-			// _ => panic!("Unknown instruction"),
-			_ => continue,
+		
+		let index: usize = match args[1].parse::<usize>() {
+			Ok(_) => 26,
+			Err(_) => args[1].chars().next().unwrap() as usize - 'a' as usize,
+		};
+		
+		let mut value: isize = 0;
+		if args.len() == 3 {
+			value = match args[2].parse() {
+				Ok(x) => x,
+				Err(_) => {
+					let i = args[2].chars().next().unwrap() as usize - 'a' as usize;
+					regs[i] as isize
+				},
+			};
 		}
+		match args[0] {
+			"snd" => snd(&regs, &index, &mut sound),
+			"set" => set(&mut regs, &index, &value),
+			"add" => add(&mut regs, &index, &value),
+			"mul" => mul(&mut regs, &index, &value),
+			"mod" => modu(&mut regs, &index, &value),
+			"rcv" => if rcv(&mut regs, &index) { break },
+			"jgz" => jgz(&mut regs, &index, &value, &mut current),
+			_ => panic!("Unknown instruction"),
+			// _ => {},
+		}
+		current += 1;
 	}
 	println!("{}", sound);
+	
+	// Part 2
+	
+	
 }
 
-fn snd(reg: &[usize], first: &str, sound: &mut usize) {
-	let index = first.chars().next().unwrap() as usize - 'a' as usize;
-	*sound = reg[index];
+fn snd(regs: &[isize], index: &usize, sound: &mut isize) {
+	*sound = regs[*index];
+}
+
+fn set(regs: &mut [isize], index: &usize, value: &isize) {
+	regs[*index] = *value;
+}
+
+fn add(regs: &mut [isize], index: &usize, value: &isize) {
+	regs[*index] += *value;
+}
+
+fn mul(regs: &mut [isize], index: &usize, value: &isize) {
+	regs[*index] *= *value;
+}
+
+fn modu(regs: &mut [isize], index: &usize, value: &isize) {
+	regs[*index] %= *value;
+}
+
+fn rcv(regs: &mut [isize], index: &usize) -> bool {
+	regs[*index] != 0
+}
+
+fn jgz(regs: &mut [isize], index: &usize, value: &isize, current: &mut isize) {
+	if regs[*index] > 0 {
+		*current -= 1;
+		*current += value;
+	}
 }
