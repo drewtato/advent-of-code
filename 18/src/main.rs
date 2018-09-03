@@ -119,6 +119,7 @@ so), how many times did program 1 send a value?
 
 use std::fs;
 use std::io::Read;
+use std::collections::VecDeque;
 
 fn main() {
 	let mut input = String::new();
@@ -171,7 +172,50 @@ fn main() {
 	
 	// Part 2
 	
+	let mut reg1: [isize; 27] = [0; 27];
+	reg1[26] = 1;
+	let mut progcount1 = 0;
+	let mut queue1: VecDeque<isize> = VecDeque::new();
+	let mut locked1 = false;
 	
+	let mut reg2: [isize; 27] = [0; 27];
+	reg2[26] = 1;
+	let mut progcount2 = 0;
+	let mut queue2: VecDeque<isize> = VecDeque::new();
+	let mut locked2 = false;
+	
+	let mut current_reg = &mut reg1;
+	let mut current_progcount = &mut progcount1;
+	let mut current_queue = &mut queue1;
+	let mut current_locked = &mut locked1;
+	
+	let mut other_reg = &mut reg2;
+	let mut other_progcount = &mut progcount2;
+	let mut other_queue = &mut queue2;
+	let mut other_locked = &mut locked2;
+	
+	let mut temp_reg;
+	let mut temp_progcount;
+	let mut temp_queue;
+	let mut temp_locked;
+	
+	let mut current_prog = 1;
+	
+	while !locked1 || !locked2 {
+		let line = lines[*current_progcount];
+		let args: Vec<_> = line.split_whitespace().collect();
+		let index: usize = match args[1].parse::<usize>() {
+			Ok(_) => 26,
+			Err(_) => {
+				match args[1].chars().next().unwrap() as usize - 'a' as usize {
+					15 => current_prog,
+					x => x,
+				}
+			},
+		};
+		let mut value: isize = 0;
+		
+	}
 }
 
 fn snd(regs: &[isize], index: &usize, sound: &mut isize) {
@@ -203,4 +247,12 @@ fn jgz(regs: &mut [isize], index: &usize, value: &isize, current: &mut isize) {
 		*current -= 1;
 		*current += value;
 	}
+}
+
+fn snd_fixed() {
+	unimplemented!();
+}
+
+fn rcv_fixed() {
+	unimplemented!();
 }
