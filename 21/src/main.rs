@@ -109,27 +109,5 @@ fn main() {
 		input.pop();
 	}
       
-      let twos = input
-            .lines()
-            .filter(|x| x.len() == 20)
-            .map(|x| x.split(" => ")
-                  .map(|x| x.split('/').collect::<Vec<_>>())
-                  .collect::<Vec<_>>())
-            .collect::<Vec<_>>();
-      // println!("twos:\n{:?}", twos);
-
-      let threes = input
-            .lines()
-            .filter(|x| x.len() != 20)
-            .map(|x| x.split(" => ")
-                  .map(|x| x.split('/').collect::<Vec<_>>())
-                  .collect::<Vec<_>>())
-            .collect::<Vec<_>>();
-      // println!("threes:\n{:?}", threes);
-
-
-}
-
-fn rotate(sq: &mut Vec<&str>) {
       
 }

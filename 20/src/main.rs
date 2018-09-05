@@ -86,6 +86,7 @@ How many particles are left after all collisions are resolved?
 
 use std::fs;
 use std::io::Read;
+use std::collections::HashMap;
 
 fn main() {
 	let mut input = String::new();
@@ -94,56 +95,87 @@ fn main() {
 	while input.chars().rev().next().unwrap().is_whitespace() {
 		input.pop();
 	}
-
-	let mut particles = Vec::new();
+	
+	// Create a Vec of particles, where each particle is a Vec of 
+	// position, velocity, and acceleration, and each of those is
+	// a Vec of the three dimensions.
+	
+	let mut particles: Vec<Vec<Vec<isize>>> = Vec::new();
 	for line in input.lines() {
-		let mut nums = line.split(|x| (x == '<') || (x == '>') || (x == ','))
-								   .filter_map(|x| x.parse::<isize>().ok());
-		let mut p = Vec::new();
-		for _ in 0..3 {
-			let mut v = Vec::new();
-			for _ in 0..3 {
-				v.push(nums.next().unwrap());
+		let mut particle = Vec::new();
+		for level_xyz in line.split_whitespace() {
+			let xyz: String = level_xyz.chars().filter(|&x| "1234567890-,".contains(x)).collect();
+			let mut dimensions = Vec::new();
+			for dimension in xyz.split(',').take(3) {
+				dimensions.push(dimension.parse::<isize>().unwrap());
 			}
-			p.push(v);
+			particle.push(dimensions);
 		}
-		particles.push(p);
+		particles.push(particle);
 	}
-
-	let mut min = 500;
-	let mut candidates = Vec::new();
-	for (x, p) in particles.iter().enumerate() {
-		let acc = p[2].iter().fold(0, |acc, &x| acc + x.abs());
-		if acc < min {
-			// println!("{}, {}, {:?}", acc, p[1].iter().fold(0, |acc, &x| acc + x.abs()), p);
-			min = acc;
-			candidates.clear();
+	
+	// Create a simpler representation where all dimension values
+	// have had their absolute values summed together.
+	
+	let mut simple_particles: Vec<Vec<isize>> = Vec::new();
+	for (index, particle) in particles.iter().enumerate() {
+		let mut simple_particle = Vec::new();
+		simple_particle.push(index as isize);
+		for level in particle.iter() {
+			let mut combined = 0;
+			for dimension in level.iter() {
+				combined += dimension.abs();
+			}
+			simple_particle.push(combined);
 		}
-		if acc == min {
-			candidates.push((x, p))
+		simple_particles.push(simple_particle);
+	}
+	
+	// Since sort is guaranteed to keep ordering between equal
+	// values, this works to get the lowest acceleration first,
+	// then lowest velocity, then lowest position.
+	
+	simple_particles.sort_by(|x,y| x[1].cmp(&y[1]));
+	simple_particles.sort_by(|x,y| x[2].cmp(&y[2]));
+	simple_particles.sort_by(|x,y| x[3].cmp(&y[3]));
+	
+	println!("{}", simple_particles[0][0]);
+	
+	// Part 2
+	
+	let mut seen = HashMap::new();
+	for _ in 0..10000 {
+		remove_collisions(&mut particles, &mut seen);
+		update_positions(&mut particles);
+	}
+	println!("{}", particles.len())
+}
+
+fn remove_collisions(particles: &mut Vec<Vec<Vec<isize>>>, seen: &mut HashMap<Vec<isize>, Vec<usize>>) {
+	for (index, particle) in particles.iter().enumerate() {
+		let indicies = seen.entry(particle[0].clone()).or_insert(Vec::new());
+		indicies.push(index);
+	}
+	let mut to_be_removed = Vec::new();
+	for (_, indicies) in seen.iter() {
+		if indicies.len() > 1 {
+			for index in indicies.iter() {
+				to_be_removed.push(*index);
+			}
 		}
 	}
+	to_be_removed.sort();
+	for index in to_be_removed.iter().rev() {
+		particles.remove(*index);
+	}
+	seen.clear();
+}
 
-	let minacc = candidates;
-	let mut candidates = Vec::new();
-	min = 5000;
-	for &(x, p) in minacc.iter() {
-		// println!("{:?}", p);
-		let acc = p[1].iter().fold(0, |acc, &x| acc + x.abs());
-		if acc < min {
-			// println!("{}, {}, {:?}", acc, p[1].iter().fold(0, |acc, &x| acc + x.abs()), p);
-			min = acc;
-			candidates.clear();
-		}
-		if acc == min {
-			candidates.push((x, p))
+fn update_positions(particles: &mut Vec<Vec<Vec<isize>>>) {
+	for i in 0..(particles.len()) {
+		for j in 0..3 {
+			particles[i][1][j] += particles[i][2][j];
+			particles[i][0][j] += particles[i][1][j];
 		}
 	}
-	if candidates.len() == 1 {
-		println!("{}", candidates[0].0);
-	} else {
-		println!("part 1 ehh");
-	}
-
-
 }
