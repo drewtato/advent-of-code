@@ -115,13 +115,13 @@ fn main() {
       //       ###\
       // ".to_string();
       
-      let mut image = "\
-            ##.\n\
-            #.#\n\
-            #..\
-      ".to_string();
+      // let mut image = "\
+      //       ##.\n\
+      //       #.#\n\
+      //       #..\
+      // ".to_string();
       
-      let mut image: Vec<Vec<usize>> = [[62].to_vec()].to_vec();
+      // let mut image: Vec<Vec<usize>> = [[62].to_vec()].to_vec();
       
       // println!("Image:\n{}", image);
       
@@ -134,9 +134,7 @@ fn main() {
                   let mut rowstring = String::new();
                   for row in rows {
                         rowstring += row;
-                        rowstring += "\n";
                   }
-                  rowstring.pop();
                   rule.push(rowstring);
             }
             let count = rule[0].matches('#').count();
@@ -146,10 +144,18 @@ fn main() {
       
       rules.sort();
       
+      // This big guy is a list of rule numbers.
       let mut rule_map: Vec<Vec<usize>> = Vec::new();
+      // Each value is either a single number or four numbers, for when
+      // there's a 3x3 result or a 4x4 result respectively. The number 
+      // corresponds to the index of the rule it applies to in the
+      // rules vec. The 4x4 results become four different 2x2 rules. 
+      
       for (_, _, rule) in rules.iter() {
             let mut rule_map_row = Vec::new();
-        'a: for section in into_sections(&rule) {
+            let mut sections = Vec::new();
+            into_sections(&rule, &mut sections);
+        'a: for section in sections.iter() {
                   for (i, (_, other_rule, _)) in rules.iter().enumerate() {
                         if rules_match(&section, &other_rule) {
                               rule_map_row.push(i);
@@ -159,6 +165,11 @@ fn main() {
                   panic!("Couldn't find match!")
             }
             rule_map.push(rule_map_row);
+      }
+      
+      for (i, (line, (_, rule, other))) in rule_map.iter().zip(rules.iter()).enumerate() {
+            print!("{}: {:?} ", i, line);
+            println!("{}, {}", rule, other);
       }
       
       // let mut rules2 = rules.iter().take(6).collect::<Vec<_>>();
@@ -197,15 +208,55 @@ fn main() {
       // }
 }
 
-fn rotate(rule: &String) -> impl Iterator<Item = String> {
-      unimplemented!();
+fn rotate(rule: &mut String) {
+      let mut temp = String::new();
+      let v = match rule.chars().count() {
+            9 => [3,6,9,2,5,8,1,4,7].to_vec(),
+            4 => [2,4,1,3].to_vec(),
+            _ => panic!("bad rule count: {}", rule),
+      };
+      for index in v.iter() {
+            temp.push(rule.chars().nth(*index - 1).expect("Rotate failed"));
+      }
+      *rule = temp;
 }
 
-fn into_sections(rule: &String) -> impl Iterator<Item = String> {
-      unimplemented!();
+fn into_sections(rule: &String, sections: &mut Vec<String>) {
+      match rule.chars().count() {
+            9 => sections.push(rule.clone()),
+            16 => {
+                  for i in 0..2 {
+                        for j in 0..2 {
+                              let mut section = String::new();
+                              for k in [0, 1, 4, 5].iter() {
+                                    section.push(rule.chars().nth((k + 2*j + 8*i) as usize).expect("Sections failed"));
+                              }
+                              sections.push(section);
+                        }
+                  }
+            },
+            _ => panic!("Not a valid rule. Here's ur terrible rule: {}", rule)
+      };
 }
 
 fn rules_match(rule: &String, other_rule: &String) -> bool {
-      // This will use rotate() somewhere
-      unimplemented!();
+      let original = other_rule.clone();
+      let mut flipped = String::new();
+      let v = match original.chars().count() {
+            9 => [3,2,1,6,5,4,9,8,7].to_vec(),
+            4 => [2,1,4,3].to_vec(),
+            _ => panic!("bad rule count: {}", original),
+      };
+      for index in v.iter() {
+            flipped.push(original.chars().nth(*index - 1).expect(&format!("\nMatch failed:\n{}\n{}\n{}\n", rule, other_rule, index)))
+      }
+      for flip in &mut [original, flipped] {
+            for _ in 0..4 {
+                  if *rule == *flip {
+                        return true;
+                  }
+                  rotate(flip);
+            }
+      }
+      false
 }
