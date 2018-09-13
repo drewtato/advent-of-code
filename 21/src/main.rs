@@ -121,8 +121,6 @@ fn main() {
       //       #..\
       // ".to_string();
       
-      // let mut image: Vec<Vec<usize>> = [[62].to_vec()].to_vec();
-      
       // println!("Image:\n{}", image);
       
       let mut rules = Vec::new();
@@ -167,45 +165,42 @@ fn main() {
             rule_map.push(rule_map_row);
       }
       
-      for (i, (line, (_, rule, other))) in rule_map.iter().zip(rules.iter()).enumerate() {
-            print!("{}: {:?} ", i, line);
-            println!("{}, {}", rule, other);
+      // for (i, (line, (_, rule, other))) in rule_map.iter().zip(rules.iter()).enumerate() {
+      //       print!("{}: {:?} ", i, line);
+      //       println!("{}, {}", rule, other);
+      // }
+      
+      let mut image: Vec<Vec<usize>> = [[62].to_vec()].to_vec();
+      
+      for i in 0..5 {
+            let mut temp = Vec::new();
+            if i % 2 != 0 {
+                  for row in image.iter() {
+                        let mut top = Vec::new();
+                        for group in row.iter() {
+                              top.push(rule_map[*group][0]);
+                        }
+                        temp.push(top);
+                  }
+            } else {
+                  for row in image.iter() {
+                        let mut top = Vec::new();
+                        let mut bottom = Vec::new();
+                        for group in row.iter() {
+                              top.push(rule_map[*group][0]);
+                              top.push(rule_map[*group][1]);
+                              bottom.push(rule_map[*group][2]);
+                              bottom.push(rule_map[*group][3]);
+                        }
+                        temp.push(top);
+                        temp.push(bottom);
+                  }
+            }
+            image = temp;
       }
       
-      // let mut rules2 = rules.iter().take(6).collect::<Vec<_>>();
-      // let mut rules3 = rules.iter().skip(6).collect::<Vec<_>>();
-      
-      // rules2.sort();
-      // rules3.sort();
-      
-      // // println!("Rules:");
-      // // for rule in rules2.iter() {
-      // //       println!("{}\n", rule.1);
-      // // }
-      
-      // // I need to convert the image into numbers that correspond to the rules
-      // // that apply to each part, and I need to convert the rules into a mapping
-      // // from one rule number to another so I can go through each iteration fast.
-      
-      // let mut rulemap2 = Vec::new();
-      // for (_, _, rule2) in rules2.iter() {
-      //       let mut rulenum = None;
-      //       'a: for (i, (_, rule3, _)) in rules3.iter()
-      //                                       .enumerate()
-      //                                       .filter(
-      //                                             |(_, (x, _, _))| 
-      //                                             *x == rule2.matches('#').count()
-      //                                       ) {
-      //             for rotation in rotate(rule3) {
-      //                   // println!("Checking if\n{}\n==\n{}", rule2, rule3);
-      //                   if rule2 == rotation {
-      //                         rulenum = Some(i);
-      //                         break 'a;
-      //                   }
-      //             }
-      //       }
-      //       rulemap2.push(rulenum.expect("Couldn't find matching rule!"));
-      // }
+      let count = image.iter().fold(0, |acc, x| acc + x.iter().fold(0, |acc, y| acc + rules[*y].0));
+      println!("{}", count);
 }
 
 fn rotate(rule: &mut String) {
