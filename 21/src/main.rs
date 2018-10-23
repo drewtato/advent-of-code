@@ -109,11 +109,11 @@ fn main() {
 		input.pop();
 	}
       
-      // let mut image = "\
-      //       .#.\n\
-      //       ..#\n\
-      //       ###\
-      // ".to_string();
+      let mut image_string = "\
+            .#.\n\
+            ..#\n\
+            ###\
+      ".to_string();
       
       // let mut image = "\
       //       ##.\n\
@@ -170,9 +170,16 @@ fn main() {
       //       println!("{}, {}", rule, other);
       // }
       
-      let mut image: Vec<Vec<usize>> = [[62].to_vec()].to_vec();
+      let mut image = Vec::new();
+      
+      // So I tried doing this without converting to #s and .s, but I didn't
+      // realize that it doesn't always alternate between divisible-by-2 and
+      // divisible-by-3. Therefore, I will need to mash it together (in some
+      // form, I'm using an actual string for clarity) and section it apart
+      // (almost) every time.
       
       for i in 0..5 {
+            image = string_to_nums(&image_string, &rule_map);
             let mut temp = Vec::new();
             if i % 2 != 0 {
                   for row in image.iter() {
@@ -196,11 +203,45 @@ fn main() {
                         temp.push(bottom);
                   }
             }
-            image = temp;
+            nums_to_string(&temp, &mut image_string, &rule_map);
+            println!("{}\n", image_string);
       }
       
+      image = string_to_nums(&image_string, &rule_map);
       let count = image.iter().fold(0, |acc, x| acc + x.iter().fold(0, |acc, y| acc + rules[*y].0));
       println!("{}", count);
+}
+
+fn string_to_nums(image_string: &str, rule_map: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+      let mut strvec = Vec::new();
+      for line in image_string.split_whitespace() {
+            strvec.push(line.as_bytes());
+      }
+      let size = strvec.len();
+      let section_size = if size % 2 == 0 { 2 } else { 3 };
+      let mut numbers = Vec::new();
+      for row in 0..(size / section_size) {
+            let mut number_row = Vec::new();
+            for col in 0..(size / section_size) {
+                  let mut byte_sec = Vec::new();
+                  for sec_row in 0..section_size {
+                        for sec_col in 0..section_size {
+                              byte_sec.push(strvec[row + sec_row][col + sec_col]);
+                        }
+                  }
+                  number_row.push(rule_to_num(&byte_sec, &rule_map));
+            }
+            numbers.push(number_row);
+      }
+      numbers
+}
+
+fn nums_to_string(nums: &Vec<Vec<usize>>, image_string: &str, rule_map: &Vec<Vec<usize>>) {
+      unimplemented!();
+}
+
+fn rule_to_num(rule: &Vec<u8>, rule_map: &Vec<Vec<usize>>) -> usize {
+      unimplemented!();
 }
 
 fn rotate(rule: &mut String) {
