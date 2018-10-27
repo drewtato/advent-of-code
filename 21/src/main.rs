@@ -115,6 +115,20 @@ fn main() {
             ###\
       ".to_string();
       
+      
+}
+
+fn rotate(rule: &mut String) {
+      let mut temp = String::new();
+      let v = match rule.chars().count() {
+            9 => [3,6,9,2,5,8,1,4,7].to_vec(),
+            4 => [2,4,1,3].to_vec(),
+            _ => panic!("bad rule count: {}", rule),
+      };
+      for index in v.iter() {
+            temp.push(rule.chars().nth(*index - 1).expect("Rotate failed"));
+      }
+      *rule = temp;
 }
 
 fn rules_match(rule: &String, other_rule: &String) -> bool {
