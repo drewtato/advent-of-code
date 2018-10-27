@@ -109,46 +109,132 @@ fn main() {
 		input.pop();
 	}
       
-      let mut image_string = "\
-            .#.\n\
-            ..#\n\
-            ###\
-      ".to_string();
+      let mut img = string_to_chunk(".#./..#/###");
+      // println!("{:?}", img)
       
+      let mut rules = Vec::new();
+      for rule in input.lines() {
+            let mut chunks = rule.split(" => ");
+            let first = string_to_chunk(chunks.next().unwrap());
+            let second = string_to_chunk(chunks.next().unwrap());
+            rules.push((first, second));
+      }
+      // remove mutability
+      let rules = rules;
+      // for rule in rules {
+      //       println!("{:?}", rule);
+      // }
       
-}
-
-fn rotate(rule: &mut String) {
-      let mut temp = String::new();
-      let v = match rule.chars().count() {
-            9 => [3,6,9,2,5,8,1,4,7].to_vec(),
-            4 => [2,4,1,3].to_vec(),
-            _ => panic!("bad rule count: {}", rule),
-      };
-      for index in v.iter() {
-            temp.push(rule.chars().nth(*index - 1).expect("Rotate failed"));
-      }
-      *rule = temp;
-}
-
-fn rules_match(rule: &String, other_rule: &String) -> bool {
-      let original = other_rule.clone();
-      let mut flipped = String::new();
-      let v = match original.chars().count() {
-            9 => [3,2,1,6,5,4,9,8,7].to_vec(),
-            4 => [2,1,4,3].to_vec(),
-            _ => panic!("bad rule count: {}", original),
-      };
-      for index in v.iter() {
-            flipped.push(original.chars().nth(*index - 1).expect(&format!("\nMatch failed:\n{}\n{}\n{}\n", rule, other_rule, index)))
-      }
-      for flip in &mut [original, flipped] {
-            for _ in 0..4 {
-                  if *rule == *flip {
-                        return true;
+      for i in 0..18 {
+            if i == 5 {
+                  let pixels = img.iter().flatten().fold(0, |acc, &x| acc + x as u32);
+                  // Print part 1
+                  println!("{}", pixels);
+            }
+            
+            let size = img.len();
+            let chunk_size = if size % 2 == 0 { 2 } else { 3 };
+            let chunks = image_as_chunks(&img, &size, &chunk_size);
+            // for chunk in chunks.iter() {
+            //       println!("{:?}", chunk);
+            // }
+            let mut new_image: Vec<Vec<u8>> = Vec::new();
+            for chunk_row in chunks.iter() {
+                  let mut bundle: Vec<Vec<u8>> = Vec::new();
+                  for _ in 0..(chunk_size + 1) {
+                        bundle.push(Vec::new());
                   }
-                  rotate(flip);
+                  for chunk in chunk_row.iter() {
+                        let new_chunk = replace_chunk(&chunk, &chunk_size, &rules);
+                        for (i, new) in new_chunk.iter().enumerate() {
+                              bundle[i].append(&mut new.clone());
+                        }
+                  }
+                  for row in bundle.iter() {
+                        new_image.push(row.clone());
+                  }
+            }
+            img = new_image;
+      }
+      
+      let pixels = img.iter().flatten().fold(0, |acc, &x| acc + x as u32);
+      // Print part 2
+      println!("{}", pixels);
+}
+
+fn replace_chunk(chunk: &Vec<Vec<u8>>, chunk_size: &usize, rules: &Vec<(Vec<Vec<u8>>, Vec<Vec<u8>>)>) -> Vec<Vec<u8>> {
+      let mut replacement = Vec::new();
+      for (rule, output) in (*rules).iter().filter(|(a, _)| a.len() == *chunk_size) {
+            if matches(&rule, &chunk) {
+                  replacement = output.clone();
+                  break;
             }
       }
+      if replacement.len() == 0 { panic!("Did not match {:?}", chunk) }
+      replacement
+}
+
+fn matches(rule: &Vec<Vec<u8>>, other: &Vec<Vec<u8>>) -> bool {
+      let mut rule = rule.clone();
+      let mut other = other.clone();
+      let mut temp = Vec::new();
+      let mut temprow = Vec::new();
+      for _ in 0..2 {
+            for _ in 0..4 {
+                  // println!("{:?} and {:?}", rule, other);
+                  if rule == other { return true; }
+                  temp.clear();
+                  for i in 0..(rule.len()) {
+                        temprow.clear();
+                        for j in 0..(rule.len()) {
+                              temprow.push(rule[j][rule.len()-1-i]);
+                        }
+                        temp.push(temprow.clone())
+                  }
+                  rule = temp.clone();
+            }
+            other.reverse();
+      }
       false
+}
+
+fn image_as_chunks(img: &Vec<Vec<u8>>, size: &usize, chunk_size: &usize) -> Vec<Vec<Vec<Vec<u8>>>> {
+      let mut chunks = Vec::new();
+      let mut chunk = Vec::new();
+      let mut chunk_row = Vec::new();
+      let mut row = Vec::new();
+      let start_values = (0..*size).filter(|a| a % chunk_size == 0);
+      for i in start_values.clone() {
+            chunk_row.clear();
+            for j in start_values.clone() {
+                  chunk.clear();
+                  for k in 0..*chunk_size {
+                        row.clear();
+                        for l in 0..*chunk_size {
+                              row.push(img[i + k][j + l]);
+                        }
+                        chunk.push(row.clone());
+                  }
+                  chunk_row.push(chunk.clone());
+            }
+            chunks.push(chunk_row.clone());
+      }
+      chunks
+}
+
+fn string_to_chunk(chunk: &str) -> Vec<Vec<u8>> {
+      let mut v = Vec::new();
+      for row in chunk.split('/') {
+            let mut r = Vec::new();
+            for c in row.chars() {
+                  let byte: u8 = match c {
+                        '#' => 1,
+                        '.' => 0,
+                        a => panic!("unrecognized char '{}'", a)
+                  };
+                  r.push(byte);
+            }
+            v.push(r);
+      }
+      v
 }
