@@ -123,4 +123,80 @@ fn main() {
 	while input.chars().rev().next().unwrap().is_whitespace() {
 		input.pop();
 	}
+	
+	// make the map usable
+	let mut map = Vec::new();
+	for line in input.lines() {
+		let mut row = Vec::new();
+		for c in line.chars() {
+			let node: u8 = match c {
+				'#' => 2,
+				'.' => 0,
+				_ => panic!(),
+			};
+			row.push(node);
+		}
+		map.push(row.clone());
+	}
+	// for row in map.iter() {
+	// 	println!("{:?}", row);
+	// }
+	
+	// create a large grid, might need to make this bigger
+	const GRID_SIZE: usize = 1000;
+	let mut grid: Vec<Vec<u8>> = vec![vec![0; GRID_SIZE]; GRID_SIZE];
+	let offset = GRID_SIZE / 2 - map.len() / 2;
+	for (i, row) in map.iter().enumerate() {
+		for (j, node) in row.iter().enumerate() {
+			grid[offset + i][offset + j] = *node;
+		}
+	}
+	// for row in grid.iter() {
+	// 	println!("{:?}", row);
+	// }
+	
+	let mut virus_pos: (usize, usize) = (GRID_SIZE / 2, GRID_SIZE / 2);
+	let mut virus_direction: u8 = 0; // 0 for up, 1 for right, etc.
+	let mut infections_caused: usize = 0;
+	
+	'a: for _ in 0..10_000_000 {
+		virus_direction += grid[virus_pos.0][virus_pos.1] + 3;
+		virus_direction %= 4;
+		grid[virus_pos.0][virus_pos.1] += 1;
+		grid[virus_pos.0][virus_pos.1] %= 4;
+		if grid[virus_pos.0][virus_pos.1] == 2 {
+			infections_caused += 1;
+		}
+		let movement: (isize, isize) = match virus_direction {
+			0 => (-1, 0),
+			1 => (0, 1),
+			2 => (1, 0),
+			3 => (0, -1),
+			x => panic!("direction is {}", x),
+		};
+		let y = virus_pos.0 as isize + movement.0;
+		let x = virus_pos.1 as isize + movement.1;
+		for index in [y, x].iter() {
+			if (index == &0) || (index == &(GRID_SIZE as isize)) { 
+				println!("left grid at {:?}", (x, y));
+				break 'a;
+			}
+		}
+		virus_pos = (y as usize, x as usize);
+	}
+	
+	// for row in grid.iter() {
+	// 	for node in row.iter() {
+	// 		let c = match node {
+	// 			0 => ' ',
+	// 			1 => 'W',
+	// 			2 => '#',
+	// 			3 => 'F',
+	// 			_ => panic!(),
+	// 		};
+	// 		print!("{}", c)
+	// 	}
+	// 	println!();
+	// }
+	println!("{}", infections_caused);
 }
