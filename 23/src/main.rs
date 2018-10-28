@@ -52,6 +52,8 @@ fn main() {
 	// for ins in instructions.iter() {
 	// 	println!("{:?}", ins);
 	// }
+	
+	// Part 1
 	let mut pc: isize = 0;
 	let mut regs: [isize; 8] = [0; 8];
 	let mut mul_executed = 0;
@@ -87,40 +89,27 @@ fn main() {
 	}
 	println!("{}", mul_executed);
 	
-	let mut pc: isize = 0;
-	let mut regs: [isize; 8] = [0; 8];
-	regs[0] = 1;
-	while pc < instructions.len() as isize {
-		let ins = instructions[pc as usize];
-		// println!("{} {:?}", pc, ins);
-		// println!("{:?}", regs);
-		match ins[0] {
-			"set" => {
-				let first = ins[1].chars().next().unwrap();
-				let index = first as usize - A;
-				regs[index] = deref(ins[2], &regs);
-			},
-			"sub" => {
-				let first = ins[1].chars().next().unwrap();
-				let index = first as usize - A;
-				regs[index] -= deref(ins[2], &regs);
-			},
-			"mul" => {
-				mul_executed += 1;
-				let first = ins[1].chars().next().unwrap();
-				let index = first as usize - A;
-				regs[index] *= deref(ins[2], &regs);
-			},
-			"jnz" => {
-				if deref(ins[1], &regs) != 0 {
-					pc += deref(ins[2], &regs) - 1;
+	// Part 2
+	// It seems like it counts the non-prime numbers that 
+	// are 109900 plus a multiple of 17 and less than 126900,
+	// but the answer I get is not correct so idk.
+	// HA JK IT WAS AN OFF-BY-ONE coding is fun heheheheeeee*dies*
+	let mut h = 0;
+	for b in (109900..126901).step_by(17) {
+		// println!("{}", x);
+		'a: for d in 2.. {
+			if d * 2 > b { break; }
+			for e in 2.. {
+				let prod = d * e;
+				if prod > b { break; } 
+				if prod == b {
+					h += 1;
+					break 'a;
 				}
-			},
-			_ => panic!(),
+			}
 		}
-		pc += 1;
 	}
-	println!("{}", regs['h' as usize - A]);
+	println!("{}", h);
 }
 
 fn deref(input: &str, regs: &[isize; 8]) -> isize {
