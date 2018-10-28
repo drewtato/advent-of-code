@@ -31,11 +31,104 @@ instruction invoked?
 use std::fs;
 use std::io::Read;
 
+static A: usize = 'a' as usize;
+
 fn main() {
 	let mut input = String::new();
 	let mut file = fs::File::open("23.txt").unwrap();
 	file.read_to_string(&mut input).expect("nu");
 	while input.chars().rev().next().unwrap().is_whitespace() {
 		input.pop();
+	}
+	
+	let mut instructions: Vec<[&str; 3]> = Vec::new();
+	for line in input.lines() {
+		let mut ins = [""; 3];
+		for (i, part) in line.split_whitespace().enumerate() {
+			ins[i] = part;
+		}
+		instructions.push(ins);
+	}
+	// for ins in instructions.iter() {
+	// 	println!("{:?}", ins);
+	// }
+	let mut pc: isize = 0;
+	let mut regs: [isize; 8] = [0; 8];
+	let mut mul_executed = 0;
+	while pc < instructions.len() as isize {
+		let ins = instructions[pc as usize];
+		// println!("{} {:?}", pc, ins);
+		// println!("{:?}", regs);
+		match ins[0] {
+			"set" => {
+				let first = ins[1].chars().next().unwrap();
+				let index = first as usize - A;
+				regs[index] = deref(ins[2], &regs);
+			},
+			"sub" => {
+				let first = ins[1].chars().next().unwrap();
+				let index = first as usize - A;
+				regs[index] -= deref(ins[2], &regs);
+			},
+			"mul" => {
+				mul_executed += 1;
+				let first = ins[1].chars().next().unwrap();
+				let index = first as usize - A;
+				regs[index] *= deref(ins[2], &regs);
+			},
+			"jnz" => {
+				if deref(ins[1], &regs) != 0 {
+					pc += deref(ins[2], &regs) - 1;
+				}
+			},
+			_ => panic!(),
+		}
+		pc += 1;
+	}
+	println!("{}", mul_executed);
+	
+	let mut pc: isize = 0;
+	let mut regs: [isize; 8] = [0; 8];
+	regs[0] = 1;
+	while pc < instructions.len() as isize {
+		let ins = instructions[pc as usize];
+		// println!("{} {:?}", pc, ins);
+		// println!("{:?}", regs);
+		match ins[0] {
+			"set" => {
+				let first = ins[1].chars().next().unwrap();
+				let index = first as usize - A;
+				regs[index] = deref(ins[2], &regs);
+			},
+			"sub" => {
+				let first = ins[1].chars().next().unwrap();
+				let index = first as usize - A;
+				regs[index] -= deref(ins[2], &regs);
+			},
+			"mul" => {
+				mul_executed += 1;
+				let first = ins[1].chars().next().unwrap();
+				let index = first as usize - A;
+				regs[index] *= deref(ins[2], &regs);
+			},
+			"jnz" => {
+				if deref(ins[1], &regs) != 0 {
+					pc += deref(ins[2], &regs) - 1;
+				}
+			},
+			_ => panic!(),
+		}
+		pc += 1;
+	}
+	println!("{}", regs['h' as usize - A]);
+}
+
+fn deref(input: &str, regs: &[isize; 8]) -> isize {
+	let first = input.chars().next().unwrap();
+	if first.is_alphabetic() {
+		let index = first as usize - A;
+		regs[index]
+	} else {
+		input.parse::<isize>().unwrap()
 	}
 }
