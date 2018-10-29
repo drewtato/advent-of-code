@@ -69,4 +69,73 @@ fn main() {
 	while input.chars().rev().next().unwrap().is_whitespace() {
 		input.pop();
 	}
+	
+	let mut components = Vec::new();
+	for line in input.lines() {
+		let mut connectors = line.split('/').map(|x| x.parse::<usize>().unwrap());
+		let first = connectors.next().unwrap();
+		let second = connectors.next().unwrap();
+		components.push([first, second]);
+	}
+	// for comp in components.iter() {
+	// 	println!("{:?}", comp);
+	// }
+	
+	// Part 1
+	let connection = 0;
+	let (_, strength) = best_bridge(&connection, &components);
+	println!("{}", strength);
+	
+	// Part 2
+	let (_, _, strength) = longest_bridge(&connection, &components);
+	println!("{}", strength);
+}
+
+fn best_bridge(connection: &usize, components: &Vec<[usize; 2]>)
+	-> (Vec<[usize; 2]>, usize) {
+	let mut best = Vec::new();
+	let mut best_strength = 0;
+	
+	for (i, comp) in components.iter().enumerate().filter(|(_, &x)| (x[0] == *connection) || (x[1] == *connection)) {
+		let new_connection = if comp[0] == *connection { comp[1] } else { comp[0] };
+		let mut new_components = components.clone();
+		let new_comp = new_components.remove(i);
+		let (mut bridge, mut strength) = best_bridge(&new_connection, &new_components);
+		strength += new_connection + *connection;
+		if best_strength < strength {
+			best = Vec::new();
+			best.push(new_comp);
+			best.append(&mut bridge);
+			best_strength = strength;
+		}
+	}
+	
+	(best, best_strength)
+}
+
+fn longest_bridge(connection: &usize, components: &Vec<[usize; 2]>)
+	-> (Vec<[usize; 2]>, usize, usize) {
+	let mut best = Vec::new();
+	let mut best_strength = 0;
+	let mut best_length = 0;
+	
+	for (i, comp) in components.iter().enumerate().filter(|(_, &x)| (x[0] == *connection) || (x[1] == *connection)) {
+		let new_connection = if comp[0] == *connection { comp[1] } else { comp[0] };
+		let mut new_components = components.clone();
+		let new_comp = new_components.remove(i);
+		let (mut bridge, mut length, mut strength) = longest_bridge(&new_connection, &new_components);
+		strength += new_connection + *connection;
+		length += 1;
+		if best_length <= length {
+			if (best_length < length) || (best_strength < strength) {
+				best = Vec::new();
+				best.push(new_comp);
+				best.append(&mut bridge);
+				best_length = length;
+				best_strength = strength;
+			}
+		}
+	}
+	
+	(best, best_length, best_strength)
 }
