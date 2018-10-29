@@ -87,8 +87,8 @@ fn main() {
 	println!("{}", strength);
 	
 	// Part 2
-	let (_, _, strength) = longest_bridge(&connection, &components);
-	println!("{}", strength);
+	let (bridge, length, strength) = longest_bridge(&connection, &components);
+	println!("{} {} {:?}", strength, length, bridge);
 }
 
 fn best_bridge(connection: &usize, components: &Vec<[usize; 2]>)
