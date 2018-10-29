@@ -90,11 +90,80 @@ checksum it produces once it's working again?
 use std::fs;
 use std::io::Read;
 
+static A: usize = 'A' as usize;
+
+#[derive(Debug)]
+struct Turing {
+    write: u8,
+    mov: isize,
+    next: usize,
+}
+
 fn main() {
-	let mut input = String::new();
-	let mut file = fs::File::open("25.txt").unwrap();
-	file.read_to_string(&mut input).expect("nu");
-	while input.chars().rev().next().unwrap().is_whitespace() {
-		input.pop();
-	}
+    let mut input = String::new();
+    let mut file = fs::File::open("25.txt").unwrap();
+    file.read_to_string(&mut input).expect("nu");
+    while input.chars().rev().next().unwrap().is_whitespace() {
+        input.pop();
+    }
+
+    // Last day, lets do this
+    let mut input_iter = input.split("\r\n\r\n");
+    let first = input_iter.next().unwrap();
+    // println!("{}", first);
+    let begin_state = first.chars().nth(15).unwrap() as usize - A;
+    let diagnostic_step = first.lines().nth(1).unwrap().split_whitespace().nth(5).unwrap().parse::<usize>().unwrap();
+    
+    let mut machine: Vec<[Turing; 2]> = Vec::new();
+    for state in input_iter {
+        let description: [Turing; 2];
+        let mut lines = state.lines();
+        lines.next().unwrap();
+        lines.next().unwrap();
+        
+        let write1 = lines.next().unwrap().chars().nth(22).unwrap() as u8 - '0' as u8;
+        let mov1 = match lines.next().unwrap().chars().nth(27).unwrap() {
+            'r' => 1,
+            'l' => -1,
+            _ => panic!(),
+        };
+        let next1 = lines.next().unwrap().chars().nth(26).unwrap() as usize - A;
+        lines.next().unwrap();
+        let write2 = lines.next().unwrap().chars().nth(22).unwrap() as u8 - '0' as u8;
+        let mov2 = match lines.next().unwrap().chars().nth(27).unwrap() {
+            'r' => 1,
+            'l' => -1,
+            _ => panic!(),
+        };
+        let next2 = lines.next().unwrap().chars().nth(26).unwrap() as usize - A;
+        description = [
+            Turing { write: write1, mov: mov1, next: next1 },
+            Turing { write: write2, mov: mov2, next: next2 }
+        ];
+        machine.push(description);
+    }
+    // println!("{} {}", begin_state, diagnostic_step);
+    // for rule in machine.iter() {
+    //     println!("{:?}", rule);
+    // }
+    
+    // big array for speeeeeed
+    const TAPE_SIZE: usize = 8000;
+    let mut tape = [0u8; TAPE_SIZE];
+    let mut current_state = begin_state;
+    let mut pos = TAPE_SIZE / 2;
+    for i in 0..diagnostic_step {
+        let write = machine[current_state][tape[pos] as usize].write;
+        let mov = machine[current_state][tape[pos] as usize].mov;
+        let next = machine[current_state][tape[pos] as usize].next;
+        
+        tape[pos] = write;
+        let pos_i = pos as isize + mov;
+        if (pos_i >= TAPE_SIZE as isize) || (pos_i < 0) {
+            panic!("Left tape at step {}", i);
+        }
+        pos = pos_i as usize;
+        current_state = next;
+    }
+    println!("{}", tape.iter().fold(0, |acc, x| acc + *x as usize));
 }
