@@ -60,6 +60,6 @@ Most of the days output two lines: the part 1 answer and the part 2 answer. Some
 
 ## Regrets
 
-If I did 2018 in Rust again (not likely), I would make each day a library or module (not sure how these each affect compile—and therefore testing and challenge completion—speed, so I would have to test first) and run each one with arguments passed to the main. That way I could more easily time the whole thing and [RLS](https://github.com/rust-lang-nursery/rls) would actually work (it doesn't for this one as-is because the top level isn't a cargo directory).
+If I did 2018 in Rust again (not likely), ~~I would make each day a library or module (not sure how these each affect compile—and therefore testing and challenge completion—speed, so I would have to test first) and run each one with arguments passed to the main.~~ **Apparently there's a built-in cargo feature called [workspaces](https://doc.rust-lang.org/book/second-edition/ch14-03-cargo-workspaces.html) which makes this waaay easier. I would use that, and recommend anyone doing this for future years to as well. I have updated this repo to use workspaces, which was relatively easy.** That way I could more easily time the whole thing and [RLS](https://github.com/rust-lang-nursery/rls) would actually work (it doesn't for this one as-is because the top level isn't a cargo directory).
 
 *T.Y. Eric, and Happy coding!*

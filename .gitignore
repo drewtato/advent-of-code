@@ -1,6 +1,8 @@
-test.rs
-test.txt
+test.*
 *.exe
 *.pdb
 Cargo.lock
 target/
+
+/target
+**/*.rs.bk
